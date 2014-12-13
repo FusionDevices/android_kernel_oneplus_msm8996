@@ -2484,9 +2484,13 @@ static __init int event_trace_init(void)
 #endif
 	return 0;
 }
-early_initcall(event_trace_memsetup);
-core_initcall(event_trace_enable);
-late_initcall(event_trace_init);
+
+void __init trace_event_init(void)
+{
+	event_trace_memsetup();
+	init_ftrace_syscalls();
+	event_trace_enable();
+}
 
 #ifdef CONFIG_FTRACE_STARTUP_TEST
 
