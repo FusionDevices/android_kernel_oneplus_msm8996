@@ -2492,6 +2492,8 @@ void __init trace_event_init(void)
 	event_trace_enable();
 }
 
+fs_initcall(event_trace_init);
+
 #ifdef CONFIG_FTRACE_STARTUP_TEST
 
 static DEFINE_SPINLOCK(test_spinlock);
