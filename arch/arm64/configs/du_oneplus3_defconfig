@@ -349,6 +349,7 @@ CONFIG_PCI_LABEL=y
 #
 # Kernel Features
 #
+CONFIG_FB_MSM_MDSS_KCAL_CTRL=y
 
 #
 # ARM errata workarounds via the alternatives framework
