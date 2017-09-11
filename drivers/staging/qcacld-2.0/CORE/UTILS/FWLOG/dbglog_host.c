@@ -1771,13 +1771,6 @@ int dbglog_report_enable(wmi_unified_t  wmi_handle, bool isenable)
 {
     int bitmap[2] = {0};
 
-    //// if (isenable > TRUE) {
-    if (isenable != TRUE) {
-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("dbglog_report_enable:Invalid value %d\n",
-        isenable));
-        return -EINVAL;
-    }
-
     if(isenable){
 	/* set the vap enable bitmap */
         dbglog_set_vap_enable_bitmap(wmi_handle, 0xFFFF);
@@ -4313,7 +4306,7 @@ int dbglog_debugfs_init(wmi_unified_t wmi_handle)
 {
 
     wmi_handle->debugfs_phy = debugfs_create_dir(CLD_DEBUGFS_DIR, NULL);
-    if (!wmi_handle->debugfs_phy)
+    if (IS_ERR_OR_NULL(wmi_handle->debugfs_phy))
         return -ENOMEM;
 
     debugfs_create_file(DEBUGFS_BLOCK_NAME, S_IRUSR, wmi_handle->debugfs_phy, &wmi_handle->dbglog,

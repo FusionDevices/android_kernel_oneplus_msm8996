@@ -1598,7 +1598,7 @@ void sapComputeSpectWeight( tSapChSelSpectInfo* pSpectInfoParams,
 
                 if(operatingBand) // Connsidering the Extension Channel only in a channels
                 {
-                    tSapSpectChInfo *pExtSpectCh;
+                    tSapSpectChInfo *pExtSpectCh = NULL;
                     /* Updating the received ChannelWidth */
                     if (pSpectCh->channelWidth != channelWidth)
                         pSpectCh->channelWidth = channelWidth;
