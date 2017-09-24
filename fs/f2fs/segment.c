@@ -17,6 +17,7 @@
 #include <linux/swap.h>
 #include <linux/timer.h>
 #include <linux/freezer.h>
+#include <linux/sched.h>
 
 #include "f2fs.h"
 #include "segment.h"
@@ -309,21 +310,17 @@ static int __commit_inmem_pages(struct inode *inode,
 				inode_dec_dirty_pages(inode);
 				remove_dirty_inode(inode);
 			}
-retry:
+
 			fio.page = page;
 			fio.old_blkaddr = NULL_ADDR;
 			fio.encrypted_page = NULL;
 			fio.need_lock = LOCK_DONE;
 			err = do_write_data_page(&fio);
 			if (err) {
-				if (err == -ENOMEM) {
-					congestion_wait(BLK_RW_ASYNC, HZ/50);
-					cond_resched();
-					goto retry;
-				}
 				unlock_page(page);
 				break;
 			}
+
 			/* record old blkaddr for revoking */
 			cur->old_addr = fio.old_blkaddr;
 			last_idx = page->index;
@@ -450,7 +447,7 @@ static int __submit_flush_wait(struct f2fs_sb_info *sbi,
 	struct bio *bio = f2fs_bio_alloc(0);
 	int ret;
 
-	bio->bi_rw = REQ_OP_WRITE;
+	bio->bi_rw = REQ_OP_WRITE | REQ_SYNC;
 	bio->bi_bdev = bdev;
 	ret = submit_bio_wait(WRITE_FLUSH, bio);
 	bio_put(bio);
@@ -485,8 +482,6 @@ repeat:
 	if (kthread_should_stop())
 		return 0;
 
-	sb_start_intwrite(sbi->sb);
-
 	if (!llist_empty(&fcc->issue_list)) {
 		struct flush_cmd *cmd, *next;
 		int ret;
@@ -504,8 +499,6 @@ repeat:
 		}
 		fcc->dispatch_list = NULL;
 	}
-
-	sb_end_intwrite(sbi->sb);
 
 	wait_event_interruptible(*q,
 		kthread_should_stop() || !llist_empty(&fcc->issue_list));
@@ -541,7 +534,10 @@ int f2fs_issue_flush(struct f2fs_sb_info *sbi)
 	atomic_inc(&fcc->issing_flush);
 	llist_add(&cmd.llnode, &fcc->issue_list);
 
-	if (!fcc->dispatch_list)
+	/* update issue_list before we wake up issue_flush thread */
+	smp_mb();
+
+	if (waitqueue_active(&fcc->flush_wait_queue))
 		wake_up(&fcc->flush_wait_queue);
 
 	if (fcc->f2fs_issue_flush) {
@@ -1092,6 +1088,7 @@ static int __issue_discard_cmd(struct f2fs_sb_info *sbi, bool issue_cond)
 	struct blk_plug plug;
 	int iter = 0, issued = 0;
 	int i;
+	bool io_interrupted = false;
 
 	mutex_lock(&dcc->cmd_lock);
 	f2fs_bug_on(sbi,
@@ -1107,14 +1104,26 @@ static int __issue_discard_cmd(struct f2fs_sb_info *sbi, bool issue_cond)
 			if (dcc->pend_list_tag[i] & P_TRIM) {
 				__submit_discard_cmd(sbi, dc);
 				issued++;
+
+				if (fatal_signal_pending(current))
+					break;
 				continue;
 			}
 
-			if (!issue_cond || is_idle(sbi)) {
-				issued++;
+			if (!issue_cond) {
 				__submit_discard_cmd(sbi, dc);
+				issued++;
+				continue;
 			}
-			if (issue_cond && iter++ > DISCARD_ISSUE_RATE)
+
+			if (is_idle(sbi)) {
+				__submit_discard_cmd(sbi, dc);
+				issued++;
+			} else {
+				io_interrupted = true;
+			}
+
+			if (++iter >= DISCARD_ISSUE_RATE)
 				goto out;
 		}
 		if (list_empty(pend_list) && dcc->pend_list_tag[i] & P_TRIM)
@@ -1123,6 +1132,9 @@ static int __issue_discard_cmd(struct f2fs_sb_info *sbi, bool issue_cond)
 out:
 	blk_finish_plug(&plug);
 	mutex_unlock(&dcc->cmd_lock);
+
+	if (!issued && io_interrupted)
+		issued = -1;
 
 	return issued;
 }
@@ -1223,7 +1235,7 @@ void stop_discard_thread(struct f2fs_sb_info *sbi)
 	}
 }
 
-/* This comes from f2fs_put_super */
+/* This comes from f2fs_put_super and f2fs_trim_fs */
 void f2fs_wait_discard_bios(struct f2fs_sb_info *sbi)
 {
 	__issue_discard_cmd(sbi, false);
@@ -1265,8 +1277,6 @@ static int issue_discard_thread(void *data)
 		if (dcc->discard_wake)
 			dcc->discard_wake = 0;
 
-		sb_start_intwrite(sbi->sb);
-
 		issued = __issue_discard_cmd(sbi, true);
 		if (issued) {
 			__wait_discard_cmd(sbi, true);
@@ -1274,8 +1284,6 @@ static int issue_discard_thread(void *data)
 		} else {
 			wait_ms = DEF_MAX_DISCARD_ISSUE_TIME;
 		}
-
-		sb_end_intwrite(sbi->sb);
 
 	} while (!kthread_should_stop());
 	return 0;
@@ -2238,6 +2246,7 @@ int f2fs_trim_fs(struct f2fs_sb_info *sbi, struct fstrim_range *range)
 	}
 	/* It's time to issue all the filed discards */
 	mark_discard_range_all(sbi);
+	f2fs_wait_discard_bios(sbi);
 out:
 	range->len = F2FS_BLK_TO_BYTES(cpc.trimmed);
 	return err;
