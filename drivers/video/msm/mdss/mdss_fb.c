@@ -1001,7 +1001,7 @@ static ssize_t mdss_fb_set_dci_p3_mode(struct device *dev,
 	return count;
 }
 
-static DEVICE_ATTR(DCI_P3, S_IRUGO | S_IWUSR,
+static DEVICE_ATTR(dci_p3, S_IRUGO | S_IWUSR,
 	mdss_fb_get_dci_p3_mode, mdss_fb_set_dci_p3_mode);
 
 
@@ -1035,8 +1035,8 @@ static struct attribute *mdss_fb_attrs[] = {
 	&dev_attr_acl.attr,
 	&dev_attr_hbm.attr,
 	&dev_attr_srgb.attr,
-		&dev_attr_Adobe_RGB.attr,
-		&dev_attr_DCI_P3.attr,
+	&dev_attr_Adobe_RGB.attr,
+	&dev_attr_dci_p3.attr,
 
 	NULL,
 };
