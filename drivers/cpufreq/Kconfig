@@ -3,8 +3,8 @@ menu "CPU Frequency scaling"
 config CPU_FREQ
 	bool "CPU Frequency scaling"
 	help
-	  CPU Frequency scaling allows you to change the clock speed of
-	  CPUs on the fly. This is a nice method to save power, because
+	  CPU Frequency scaling allows you to change the clock speed of 
+	  CPUs on the fly. This is a nice method to save power, because 
 	  the lower the CPU clock speed, the less power the CPU consumes.
 
 	  Note that this driver doesn't automatically change the CPU
@@ -85,7 +85,7 @@ config CPU_FREQ_DEFAULT_GOV_USERSPACE
 	select CPU_FREQ_GOV_USERSPACE
 	help
 	  Use the CPUFreq governor 'userspace' as default. This allows
-	  you to set the CPU frequency manually or when a userspace
+	  you to set the CPU frequency manually or when a userspace 
 	  program shall be able to set the CPU dynamically without having
 	  to enable the userspace governor manually.
 
@@ -100,12 +100,6 @@ config CPU_FREQ_DEFAULT_GOV_ONDEMAND
 	  Be aware that not all cpufreq drivers support the ondemand
 	  governor. If unsure have a look at the help section of the
 	  driver. Fallback governor will be the performance governor.
-
-config CPU_FREQ_DEFAULT_GOV_LIONHEART
-            bool "lionheart"
-            select CPU_FREQ_GOV_LIONHEART
-            help
-              Use the CPUFreq governor 'lionheart' as default.
 
 config CPU_FREQ_DEFAULT_GOV_CONSERVATIVE
 	bool "conservative"
@@ -127,14 +121,7 @@ config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
 	  you to get a full dynamic cpu frequency capable system by simply
 	  loading your cpufreq low-level hardware driver, using the
 	  'interactive' governor for latency-sensitive workloads.
-
-config CPU_FREQ_DEFAULT_GOV_ELEMENTALX
-	bool "elementalx"
-	select CPU_FREQ_GOV_ELEMENTALX
-	select CPU_FREQ_GOV_PERFORMANCE
-	help
-	  Use the CPUFreq governor 'elementalx' as default.
-
+	  
 config CPU_FREQ_DEFAULT_GOV_BLU_ACTIVE
 	bool "blu_active"
 	select CPU_FREQ_GOV_BLU_ACTIVE
@@ -142,22 +129,7 @@ config CPU_FREQ_DEFAULT_GOV_BLU_ACTIVE
 	  Use the CPUFreq governor 'blu_active' as default. This allows
 	  you to get a full dynamic cpu frequency capable system by simply
 	  loading your cpufreq low-level hardware driver, using the
-	  'interactive' governor for latency-sensitive workloads.
-
-config CPU_FREQ_DEFAULT_GOV_IMPULSE
-	bool "impulse"
-	select CPU_FREQ_GOV_IMPULSE
-	help
-	  Use the CPUFreq governor 'impulse' as default. This allows
-	  you to get a full dynamic cpu frequency capable system by simply
-	  loading your cpufreq low-level hardware driver, using the
-	  'impulse' governor for latency-sensitive workloads.
-
-config CPU_FREQ_DEFAULT_GOV_BIOSHOCK
-	bool "BioShock"
-	select CPU_FREQ_GOV_BIOSHOCK
-	help
-	  Default governor of BioShock kernel
+	  'interactive' governor for latency-sensitive workloads.	  
 
 endchoice
 
@@ -188,7 +160,7 @@ config CPU_FREQ_GOV_USERSPACE
 	help
 	  Enable this cpufreq governor when you either want to set the
 	  CPU frequency manually or when a userspace program shall
-	  be able to set the CPU dynamically, like on LART
+	  be able to set the CPU dynamically, like on LART 
 	  <http://www.lartmaker.nl/>.
 
 	  To compile this driver as a module, choose M here: the
@@ -203,11 +175,11 @@ config CPU_FREQ_GOV_ONDEMAND
 	select CPU_FREQ_GOV_COMMON
 	help
 	  'ondemand' - This driver adds a dynamic cpufreq policy governor.
-	  The governor does a periodic polling and
+	  The governor does a periodic polling and 
 	  changes frequency based on the CPU utilization.
 	  The support for this governor depends on CPU capability to
 	  do fast frequency switching (i.e, very low latency frequency
-	  transitions).
+	  transitions). 
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called cpufreq_ondemand.
@@ -215,13 +187,6 @@ config CPU_FREQ_GOV_ONDEMAND
 	  For details, take a look at linux/Documentation/cpu-freq.
 
 	  If in doubt, say N.
-
-config CPU_FREQ_GOV_LIONHEART
-           tristate "'lionheart' cpufreq governor"
-           depends on CPU_FREQ
-           help
-             lionheart' - a "smart" optimized governor!
-             If in doubt, say N.
 
 config CPU_FREQ_GOV_INTERACTIVE
 	tristate "'interactive' cpufreq policy governor"
@@ -237,25 +202,6 @@ config CPU_FREQ_GOV_INTERACTIVE
 	  module will be called cpufreq_interactive.
 
 	  For details, take a look at linux/Documentation/cpu-freq.
-
-	  If in doubt, say N.
-
-config CPU_FREQ_GOV_ELEMENTALX
-	tristate "'elementalx' cpufreq policy governor"
-	select CPU_FREQ_TABLE
-	help
-	  'elementalx' - This driver adds a dynamic cpufreq policy governor.
-
-	  To compile this driver as a module, choose M here: the
-	  module will be called cpufreq_elementalx.
-
-	  For details, take a look at linux/Documentation/cpu-freq.
-
-config CPU_FREQ_GOV_IMPULSE
-	tristate "'impulse' cpufreq policy governor"
-	help
-	  'impulse' - This driver adds a dynamic cpufreq policy governor
-	  designed for latency-sensitive workloads.
 
 	  If in doubt, say N.
 
@@ -296,27 +242,6 @@ config CPUFREQ_DT
 
 	  If in doubt, say N.
 
-config CPU_FREQ_GOV_BIOSHOCK
-	tristate "'bioshock' cpufreq bioshock"
-	depends on CPU_FREQ
-	help
-	  'bioshock' - More aggressive version of conservative
-
-config CPU_FREQ_GOV_BLU_ACTIVE
-	tristate "'blu_active' cpufreq policy governor"
-	help
-	  'blu_active' - This driver adds a dynamic cpufreq policy governor
-	  designed for latency-sensitive workloads.
-
-	  This governor attempts to reduce the latency of clock
-	  increases so that the system is more responsive to
-	  interactive workloads.
-
-	  To compile this driver as a module, choose M here: the
-	  module will be called cpufreq_blu_active.
-
-	  If in doubt, say N.
-
 config CPU_BOOST
 	tristate "Event base short term CPU freq boost"
 	depends on CPU_FREQ
@@ -327,6 +252,21 @@ config CPU_BOOST
 	  - Migration of important threads from one CPU to another.
 
 	  If in doubt, say N.
+	  
+config CPU_FREQ_GOV_BLU_ACTIVE
+	tristate "'blu_active' cpufreq policy governor"
+	help
+	  'blu_active' - This driver adds a dynamic cpufreq policy governor
+	  designed for latency-sensitive workloads.
+	  
+	  This governor attempts to reduce the latency of clock
+	  increases so that the system is more responsive to
+	  interactive workloads.
+	  
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_blu_active.
+	  
+	  If in doubt, say N.  
 
 config FINGERPRINT_BOOST
 	bool "Fingerprint Boost"
